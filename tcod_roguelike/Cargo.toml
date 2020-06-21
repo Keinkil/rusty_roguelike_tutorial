@@ -1,5 +1,5 @@
 [package]
-name = "roguelike"
+name = "tcod_roguelike"
 version = "0.1.0"
 authors = ["Rikard Almgren <rikard.almgren@protonmail.com>"]
 edition = "2018"
