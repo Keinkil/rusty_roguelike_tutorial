@@ -3,6 +3,9 @@ use specs::prelude::*;
 
 mod components;
 pub use components::*;
+mod gamelog;
+pub use gamelog::GameLog;
+mod gui;
 mod map;
 pub use map::*;
 mod player;
@@ -94,6 +97,7 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
             }
         }
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 
@@ -194,5 +198,6 @@ fn main() -> rltk::BError {
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(gamelog::GameLog{ entries: vec!["Welcome to Rusty Roguelike".to_string()]});
     rltk::main_loop(context, gs)
 }
