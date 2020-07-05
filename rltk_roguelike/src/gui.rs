@@ -173,7 +173,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     );
     ctx.print_color(
         18,
-        -32,
+        -2,
         RGB::named(rltk::YELLOW),
         RGB::named(rltk::BLACK),
         "Inventory",
