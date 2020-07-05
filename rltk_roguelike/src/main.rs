@@ -66,6 +66,7 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
+        draw_map(&self.ecs, ctx);
 
         let mut newrunstate;
         {
@@ -168,7 +169,6 @@ impl GameState for State {
         }
 
         damage_system::delete_the_dead(&mut self.ecs);
-        draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -188,10 +188,12 @@ impl GameState for State {
 
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
-    let context = RltkBuilder::simple80x50()
+    let mut context = RltkBuilder::simple80x50()
         .with_title("RLTK Roguelike Tutorial")
         .build()?;
+    context.with_post_scanlines(true);
     let mut gs = State { ecs: World::new() };
+
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
