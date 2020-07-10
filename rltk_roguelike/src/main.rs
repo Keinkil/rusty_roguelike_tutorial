@@ -67,8 +67,8 @@ impl State {
         pickup.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem {};
         drop_items.run_now(&self.ecs);
-        let mut potions = ItemUseSystem {};
-        potions.run_now(&self.ecs);
+        let mut itemuse = ItemUseSystem {};
+        itemuse.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -80,12 +80,14 @@ impl GameState for State {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
+
         ctx.cls();
 
         match newrunstate {
             RunState::MainMenu { .. } => {}
             _ => {
                 draw_map(&self.ecs, ctx);
+
                 {
                     let positions = self.ecs.read_storage::<Position>();
                     let renderables = self.ecs.read_storage::<Renderable>();
@@ -96,13 +98,15 @@ impl GameState for State {
                     for (pos, render) in data.iter() {
                         let idx = map.xy_idx(pos.x, pos.y);
                         if map.visible_tiles[idx] {
-                            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+                            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
                         }
                     }
+
                     gui::draw_ui(&self.ecs, ctx);
                 }
             }
         }
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
@@ -223,7 +227,6 @@ impl GameState for State {
             let mut runwriter = self.ecs.write_resource::<RunState>();
             *runwriter = newrunstate;
         }
-
         damage_system::delete_the_dead(&mut self.ecs);
     }
 }
@@ -257,6 +260,9 @@ fn main() -> rltk::BError {
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<WantsToDropItem>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
+
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map: Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -270,10 +276,11 @@ fn main() -> rltk::BError {
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
-    gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(RunState::MainMenu {
+        menu_selection: gui::MainMenuSelection::NewGame,
+    });
     gs.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to Rusty Roguelike".to_string()],
     });
-    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     rltk::main_loop(context, gs)
 }

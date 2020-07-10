@@ -1,5 +1,6 @@
 use super::{
-    CombatStats, GameLog, InBackpack, Map, Name, Player, Position, RunState, State, Viewshed,
+    gamelog::GameLog, CombatStats, InBackpack, Map, Name, Player, Position, RunState, State,
+    Viewshed,
 };
 use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use specs::prelude::*;
@@ -38,7 +39,6 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
     }
 
     let log = ecs.fetch::<GameLog>();
-
     let mut y = 44;
     for s in log.entries.iter().rev() {
         if y < 49 {
@@ -47,7 +47,7 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
         y += 1;
     }
 
-    // draw mouse cursor
+    // Draw mouse cursor
     let mouse_pos = ctx.mouse_pos();
     ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
     draw_tooltips(ecs, ctx);
@@ -81,12 +81,11 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
 
         if mouse_pos.0 > 40 {
             let arrow_pos = Point::new(mouse_pos.0 - 2, mouse_pos.1);
-            let left_x = mouse_pos.0 + 3;
+            let left_x = mouse_pos.0 - width;
             let mut y = mouse_pos.1;
-
             for s in tooltip.iter() {
                 ctx.print_color(
-                    left_x + 1,
+                    left_x,
                     y,
                     RGB::named(rltk::WHITE),
                     RGB::named(rltk::GREY),
@@ -126,7 +125,7 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
                 let padding = (width - s.len() as i32) - 1;
                 for i in 0..padding {
                     ctx.print_color(
-                        arrow_pos.x - i,
+                        arrow_pos.x + 1 + i,
                         y,
                         RGB::named(rltk::WHITE),
                         RGB::named(rltk::GREY),
@@ -175,7 +174,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     );
     ctx.print_color(
         18,
-        -2,
+        y - 2,
         RGB::named(rltk::YELLOW),
         RGB::named(rltk::BLACK),
         "Inventory",
@@ -382,6 +381,7 @@ pub fn ranged_target(
             return (ItemMenuResult::Cancel, None);
         }
     }
+
     (ItemMenuResult::NoResponse, None)
 }
 
@@ -429,20 +429,22 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
             );
         }
 
-        if selection == MainMenuSelection::LoadGame {
-            ctx.print_color_centered(
-                25,
-                RGB::named(rltk::MAGENTA),
-                RGB::named(rltk::BLACK),
-                "Load Game",
-            );
-        } else {
-            ctx.print_color_centered(
-                25,
-                RGB::named(rltk::WHITE),
-                RGB::named(rltk::BLACK),
-                "Load Game",
-            );
+        if save_exists {
+            if selection == MainMenuSelection::LoadGame {
+                ctx.print_color_centered(
+                    25,
+                    RGB::named(rltk::MAGENTA),
+                    RGB::named(rltk::BLACK),
+                    "Load Game",
+                );
+            } else {
+                ctx.print_color_centered(
+                    25,
+                    RGB::named(rltk::WHITE),
+                    RGB::named(rltk::BLACK),
+                    "Load Game",
+                );
+            }
         }
 
         if selection == MainMenuSelection::Quit {
