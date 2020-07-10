@@ -1,6 +1,7 @@
 extern crate serde;
 use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
 mod components;
 pub use components::*;
@@ -24,6 +25,7 @@ mod melee_combat_system;
 use melee_combat_system::MeleeCombatSystem;
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
+mod saveload_system;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
 
@@ -198,7 +200,11 @@ impl GameState for State {
                     }
                     gui::MainMenuResult::Selected { selected } => match selected {
                         gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
-                        gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                        gui::MainMenuSelection::LoadGame => {
+                            saveload_system::load_game(&mut self.ecs);
+                            newrunstate = RunState::AwaitingInput;
+                            saveload_system::delete_save();
+                        }
                         gui::MainMenuSelection::Quit => {
                             ::std::process::exit(0);
                         }
@@ -206,10 +212,9 @@ impl GameState for State {
                 }
             }
             RunState::SaveGame => {
-                let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-                println!("{}", data);
+                saveload_system::save_game(&mut self.ecs);
                 newrunstate = RunState::MainMenu {
-                    menu_selection: gui::MainMenuSelection::LoadGame,
+                    menu_selection: gui::MainMenuSelection::Quit,
                 };
             }
         }
@@ -251,6 +256,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<WantsToDropItem>();
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
 
     let map: Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -268,5 +274,6 @@ fn main() -> rltk::BError {
     gs.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to Rusty Roguelike".to_string()],
     });
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
     rltk::main_loop(context, gs)
 }

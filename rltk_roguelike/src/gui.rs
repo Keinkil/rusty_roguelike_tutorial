@@ -399,6 +399,7 @@ pub enum MainMenuResult {
 }
 
 pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
+    let save_exists = super::saveload_system::does_save_exist();
     let runstate = gs.ecs.fetch::<RunState>();
 
     ctx.print_color_centered(
@@ -468,22 +469,28 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
                     }
                 }
                 VirtualKeyCode::Up => {
-                    let newselection;
+                    let mut newselection;
                     match selection {
                         MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
                         MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
                         MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame,
+                    }
+                    if newselection == MainMenuSelection::LoadGame && !save_exists {
+                        newselection = MainMenuSelection::NewGame;
                     }
                     return MainMenuResult::NoSelection {
                         selected: newselection,
                     };
                 }
                 VirtualKeyCode::Down => {
-                    let newselection;
+                    let mut newselection;
                     match selection {
                         MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
                         MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
                         MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame,
+                    }
+                    if newselection == MainMenuSelection::LoadGame && !save_exists {
+                        newselection = MainMenuSelection::Quit;
                     }
                     return MainMenuResult::NoSelection {
                         selected: newselection,
