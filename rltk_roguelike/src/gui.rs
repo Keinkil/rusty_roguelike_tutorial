@@ -38,6 +38,16 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
         );
     }
 
+    let map = ecs.fetch::<Map>();
+    let depth = format!("Depth: {}", map.depth);
+    ctx.print_color(
+        2,
+        43,
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::BLACK),
+        &depth,
+    );
+
     let log = ecs.fetch::<GameLog>();
     let mut y = 44;
     for s in log.entries.iter().rev() {
@@ -407,6 +417,23 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
         RGB::named(rltk::YELLOW),
         RGB::named(rltk::BLACK),
         "(C)Rusty Roguelike",
+    );
+
+    ctx.print_color_centered_at(
+        61,
+        5,
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::BLACK),
+        "===Key Mapping===",
+    );
+    ctx.print(50, 6, "Movement: Arrowkeys/Numpad");
+    ctx.print(50, 7, format!("Pickup: {:?}", VirtualKeyCode::G));
+    ctx.print(50, 8, format!("Drop: {:?}", VirtualKeyCode::D));
+    ctx.print(50, 9, format!("Inventory: {:?}", VirtualKeyCode::I));
+    ctx.print(
+        50,
+        10,
+        format!("Descend Stairs: {:?}", VirtualKeyCode::Period),
     );
 
     if let RunState::MainMenu {
